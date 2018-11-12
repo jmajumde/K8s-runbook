@@ -1,0 +1,7 @@
+cd to this directory
+$ cd docker-demo
+$ docker build -t jmajumde/nodejs-helloworld-v1 .
+[..]
+$ docker login
+$ docker images list
+$ docker push jmajumde/nodejs-helloworld-v1
