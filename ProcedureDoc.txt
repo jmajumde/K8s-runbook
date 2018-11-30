@@ -1,4 +1,5 @@
 Kubernetes Procedure Document
+-----------------------------
 Github repository [Read this first]
 Download all the course material from: https://github.com/wardviaene/kubernetes-course
 
@@ -72,36 +73,89 @@ Namecheap.com often has promotions for tld’s like .co for just a couple of buc
 
 
 Cluster Commands
-kops create cluster --name=kubernetes.majumder-jyotisekhar.me --state=s3://jm-kops-state --zones=us-east-1a --node-count=2 --node-size=t2.micro --master-size=t2.micro --dns-zone=kubernetes.majumder-jyotisekhar.me
-kops edit cluster kubernetes.majumder-jyotisekhar.me --state=s3://jm-kops-state
+----------------
+> kops create cluster --name=kubernetes.majumder-jyotisekhar.me --state=s3://jm-kops-state --zones=us-east-1a --node-count=2 --node-size=t2.micro --master-size=t2.micro --dns-zone=kubernetes.majumder-jyotisekhar.me
+> kops edit cluster kubernetes.majumder-jyotisekhar.me --state=s3://jm-kops-state
 
-kops update cluster kubernetes.majumder-jyotisekhar.me --yes --state=s3://jm-kops-state
+> kops update cluster kubernetes.majumder-jyotisekhar.me --yes --state=s3://jm-kops-state
 
-kops delete cluster --name kubernetes.majumder-jyotisekhar.me --state=s3://jm-kops-state
+> kops delete cluster --name kubernetes.majumder-jyotisekhar.me --state=s3://jm-kops-state
 
-kops delete cluster --name kubernetes.majumder-jyotisekhar.me --state=s3://jm-kops-state --yes
+> kops delete cluster --name kubernetes.majumder-jyotisekhar.me --state=s3://jm-kops-state --yes
+> kops get clusters --state=s3://jm-kops-state
 
  * validate cluster: kops validate cluster --state=s3://jm-kops-state
  * list nodes: kubectl get nodes --show-labels
  * ssh to the master: ssh -i ~/.ssh/id_rsa admin@api.kubernetes.majumder-jyotisekhar.me
 
-https://www.devops.buzz/kubernetes-start-and-stop-cluster-using-kops/
 
-aws ec2 describe-instances --query 'Reservations[*].Instances[*].[InstanceId,State.Name,InstanceType,PrivateIpAddress,PublicIpAddress,Tags[?Key==`Name`].Value[]]' --output json | tr -d '\n[] "' | perl -pe 's/i-/\ni-/g' | tr ',' '\t' | sed -e 's/null/None/g' | grep '^i-' | column -t
+new ssh-key upload
+------------------
+> kops create secret sshpublickey admin -i ~/.ssh/beast_rsa.pub --name kubernetes.majumder-jyotisekhar.me --state=s3://jm-kops-state
+>kops delete secret SSHPublicKey admin1 a2:58:eb:30:5b:41:83:4a:c6:39:d4:33:65:5d:ec:9c --name kubernetes.majumder-jyotisekhar.me --state=s3://jm-kops-state
+>kops update cluster kubernetes.majumder-jyotisekhar.me --yes --state=s3://jm-kops-state
+>kops rolling-update cluster --name kubernetes.majumder-jyotisekhar.me --state=s3://jm-kops-state --yes
 
 
-cd /home/opc/jm-docker-demo
-docker build -t jmajumde/jm-docker-demo .
-docker image list
-docker run -p 3000:3000 -it 674b6a3b4d71  -> to test
+[ https://www.devops.buzz/kubernetes-start-and-stop-cluster-using-kops/ ]
 
-- push the above image 
-docker login
-docker tag imageid your-login/jm-docker-demo
-docker push your-login/jm-docker-demo
+> aws ec2 describe-instances --query 'Reservations[*].Instances[*].[InstanceId,State.Name,InstanceType,PrivateIpAddress,PublicIpAddress,Tags[?Key==`Name`].Value[]]' --output json | tr -d '\n[] "' | perl -pe 's/i-/\ni-/g' | tr ',' '\t' | sed -e 's/null/None/g' | grep '^i-' | column -t
+
+
+deploy hello-minikube app in ec2 k8s cluster
+---------------------------------------------
+> kubectl run hello-minikube --image=k8s.gcr.io/echoserver:1.4 --port=8080
+> kubectl expose deployment hello-minikube --type=NodePort
+> kubectl get services
+
+
+docker image/registry/push n deploy app in minikube
+---------------------------------------------------
+> cd /home/opc/jm-docker-demo
+> docker build -t jmajumde/nodejs-helloworld-v1 .
+> docker image list
+> docker run -p 3000:3000 -it 674b6a3b4d71  -> to test
+
+push the above image 
+
+> docker login
+> docker tag imageid jmajumde/nodejs-helloworld-v1 ===> not required, if -t is used in docker build
+> docker push jmajumde/nodejs-helloworld-v1
+
+Now deploy the first-app helloworld in minikube
+------------------------------------------------
+> minikube status
+
+You can point your docker client to the VM's docker daemon by running. So that everytime kubectl does not try to pull the image from remote registry which speeds up pod provisioning. We need to mention "imagePullPolicy: IfNotPresent" in the pod provisioning yml specification. 
+
+eval $(minikube docker-env)
+
+But didnt work for me.
+
+Alternatively we can create a secret for using remote registry like below, and mention "imagePullSecrets:" flag in the pod provisioning yml specification. This needs to be done for each pod that is using a private registry.
+However, setting of this field can be automated by setting the imagePullSecrets in a serviceAccount resource. Check Add ImagePullSecrets to a Service Account (https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#add-imagepullsecrets-to-a-service-account) for detailed instructions.
+
+> kubectl create secret docker-registry mydockerhubregistry --docker-server=https://hub.docker.com --docker-username=<user> --docker-password='<passwd>' --docker-email="<email>"
+> kubectl get serviceaccounts
+> kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "mydockerhubregistry"}]}'
+> kubectl get serviceaccounts default -o json
+
+> kubectl create -f ~/mywork/k8s-nonsense/first-app/helloworld.yml
+> kubectl describe pod nodehelloworld.example.com
+
+==== But this also does not work for me ====
+
+to test the pod and the service initially we can test it by port-forward
+> kubectl port-forward nodehelloworld.example.com 8081:3000
+
+But its better to create a service for the pod. To create a service in minikube 
+> kubectl expose pod nodehelloworld.example.com --type=NodePort --name nodehelloworld-service
+> minikube service nodehelloworld-service --url
+
 
  
 Kubernetes from scratch
+------------------------
 You can setup your cluster manually from scratch
 
 If you’re planning to deploy on AWS / Google / Azure, use the tools that are fit for these platforms
@@ -119,41 +173,9 @@ MacOS: https://docs.docker.com/engine/installation/mac/
 
 Linux: https://docs.docker.com/engine/installation/linux/
 
-DevOps box
-Virtualbox: http://www.virtualbox.org
-
-Vagrant: http://www.vagrantup.com
-
-DevOps box: https://github.com/wardviaene/devops-box
-
-Launch commands (in terminal / cmd / powershell):
-
-cd devops-box/
-
-vagrant up
-
-Launch commands for a plain ubuntu box:
-
-mkdir ubuntu
-
-vagrant init ubuntu/xenial64
-
-vagrant up
-
-Cheatsheet: Docker commands
-Build image: docker build .
-
-Build & Tag: docker build -t wardviaene/k8s-demo:latest .
-
-Tag image: docker tag imageid wardviaene/k8s-demo
-
-Push image: docker push wardviaene/k8s-demo
-
-List images: docker images
-
-List all containers: docker ps -a
 
 Cheatsheet: Kubernetes commands
+-------------------------------
 kubectl get pod: Get information about all running pods
 
 kubectl describe pod <pod>: Describe one pod
@@ -165,12 +187,16 @@ kubectl port-forward <pod> 8080: Port forward the exposed pod port to your local
 kubectl attach <podname> -i: Attach to the pod
 
 kubectl exec <pod> -- command: Execute a command on the pod
+kubectl exec <pod> -- ls /app
+
 
 kubectl label pods <pod> mylabel=awesome: Add a new label to a pod
 
 kubectl run -i --tty busybox --image=busybox --restart=Never -- sh: Run a shell in a pod - very useful for debugging
 
 kubectl get deployments: Get information on current deployments
+
+kubectl get services
 
 kubectl get rs: Get information about the replica sets
 
