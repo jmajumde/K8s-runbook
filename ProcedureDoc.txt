@@ -1,13 +1,7 @@
 Kubernetes Procedure Document
 -----------------------------
 Github repository [Read this first]
-Download all the course material from: https://github.com/wardviaene/kubernetes-course
-
-Kubernetes releases minor version updates of its distribution every 3 months
-
-Rather than updating the scripts in the video lectures, the repository in Github is updated if any script need changes
-
-The changes are often very minor, the API is very stable. Often API versions like v1betaX change to v1betaX+1 or to v1 (stable)
+Kubernetes releases minor version updates of its distribution every 3 months.The changes are often very minor, the API is very stable. Often API versions like v1betaX change to v1betaX+1 or to v1 (stable).
 
 All the scripts you can find in the repository should work with the latest version of Kubernetes, if you have any issues, contact me through one of the channels listed below
 
@@ -16,60 +10,60 @@ Send me a message
 
 Use Q&A
 
-Join our facebook group: https://www.facebook.com/groups/840062592768074/
+**Download Kubectl**
+Linux:[https://storage.googleapis.com/kubernetes-release/release/v1.11.0/bin/linux/amd64/kubectl]
 
-Download Kubectl
-Linux: https://storage.googleapis.com/kubernetes-release/release/v1.11.0/bin/linux/amd64/kubectl
+MacOS:[https://storage.googleapis.com/kubernetes-release/release/v1.11.0/bin/darwin/amd64/kubectl]
 
-MacOS: https://storage.googleapis.com/kubernetes-release/release/v1.11.0/bin/darwin/amd64/kubectl
-
-Windows: https://storage.googleapis.com/kubernetes-release/release/v1.11.0/bin/windows/amd64/kubectl.exe
+Windows:[https://storage.googleapis.com/kubernetes-release/release/v1.11.0/bin/windows/amd64/kubectl.exe]
 
 Or use a packaged version for your OS: see https://kubernetes.io/docs/tasks/tools/install-kubectl/
 
-Minikube
-Project URL: https://github.com/kubernetes/minikube
+**Minikube**
+Project URL:[https://github.com/kubernetes/minikube]
 
-Latest Release and download instructions: https://github.com/kubernetes/minikube/releases
+Latest Release and download instructions: [https://github.com/kubernetes/minikube/releases]
 
 VirtualBox: http://www.virtualbox.org
 
-Minikube on windows:
-Download the latest minikube-version.exe
-
-Rename the file to minikube.exe and put it in C:\minikube
-
-Open a cmd (search for the app cmd or powershell)
-
-Run: cd C:\minikube and enter minikube start
-
-Test your cluster commands
-Make sure your cluster is running, you can check with minikube status.
-
-If your cluster is not running, enter minikube start first.
-
-kubectl run hello-minikube --image=k8s.gcr.io/echoserver:1.4 --port=8080
-kubectl expose deployment hello-minikube --type=NodePort
+>kubectl run hello-minikube --image=k8s.gcr.io/echoserver:1.4 --port=8080
+>kubectl expose deployment hello-minikube --type=NodePort
 
 minikube service hello-minikube --url
 
 <open a browser and go to that url>
 
-Kops
-Project URL
-https://github.com/kubernetes/kops
+**Kops**
+Project URL [https://github.com/kubernetes/kops]
 
-Free DNS Service
-Sign up at http://freedns.afraid.org/
-
-Choose for subdomain hosting
-
+**Choose for subdomain hosting**
 Enter the AWS nameservers given to you in route53 as nameservers for the subdomain
 
 http://www.dot.tk/ provides a free .tk domain name you can use and you can point it to the amazon AWS nameservers
 
 Namecheap.com often has promotions for tld’s like .co for just a couple of bucks
 
+
+Kubernetes from scratch
+------------------------
+You can setup your cluster manually from scratch
+
+If you’re planning to deploy on AWS / Google / Azure, use the tools that are fit for these platforms
+
+If you have an unsupported cloud platform, and you still want Kubernetes, you can install it manually
+
+CoreOS + Kubernetes: ###a href="https://coreos.com/kubernetes/docs/latest/getting-started.html">https://coreos.com/kubernetes/docs/latest/getting-started.html
+
+doc: [https://kubernetes.io/docs/concepts/overview/what-is-kubernetes/]
+
+Docker
+You can download Docker Engine for:
+
+Windows: https://docs.docker.com/engine/installation/windows/
+
+MacOS: https://docs.docker.com/engine/installation/mac/
+
+Linux: https://docs.docker.com/engine/installation/linux/
 
 
 Cluster Commands
@@ -126,14 +120,14 @@ Now deploy the first-app helloworld in minikube
 ------------------------------------------------
 > minikube status
 
-You can point your docker client to the VM's docker daemon by running. So that everytime kubectl does not try to pull the image from remote registry which speeds up pod provisioning. We need to mention "imagePullPolicy: IfNotPresent" in the pod provisioning yml specification. 
+You can point your docker client to the VM's docker daemon by running. So that everytime kubectl does not try to pull the image from remote registry which speeds up pod provisioning. We need to mention "**imagePullPolicy: IfNotPresent**" in the pod provisioning yml specification. 
 
 eval $(minikube docker-env)
 
 But didnt work for me.
 
-Alternatively we can create a secret for using remote registry like below, and mention "imagePullSecrets:" flag in the pod provisioning yml specification. This needs to be done for each pod that is using a private registry.
-However, setting of this field can be automated by setting the imagePullSecrets in a serviceAccount resource. Check Add ImagePullSecrets to a Service Account (https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#add-imagepullsecrets-to-a-service-account) for detailed instructions.
+Alternatively we can create a secret for using remote registry like below, and mention "__imagePullSecrets:__" flag in the pod provisioning yml specification. This needs to be done for each pod that is using a private registry.
+However, setting of this field can be automated by setting the imagePullSecrets in a serviceAccount resource. Check Add ImagePullSecrets to a Service Account [ttps://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#add-imagepullsecrets-to-a-service-account]for detailed instructions.
 
 > kubectl create secret docker-registry mydockerhubregistry --docker-server=https://hub.docker.com --docker-username=<user> --docker-password='<passwd>' --docker-email="<email>"
 > kubectl get serviceaccounts
@@ -153,112 +147,34 @@ But its better to create a service for the pod. To create a service in minikube
 > minikube service nodehelloworld-service --url
 
 
- 
-Kubernetes from scratch
-------------------------
-You can setup your cluster manually from scratch
-
-If you’re planning to deploy on AWS / Google / Azure, use the tools that are fit for these platforms
-
-If you have an unsupported cloud platform, and you still want Kubernetes, you can install it manually
-
-CoreOS + Kubernetes: ###a href="https://coreos.com/kubernetes/docs/latest/getting-started.html">https://coreos.com/kubernetes/docs/latest/getting-started.html
-
-Docker
-You can download Docker Engine for:
-
-Windows: https://docs.docker.com/engine/installation/windows/
-
-MacOS: https://docs.docker.com/engine/installation/mac/
-
-Linux: https://docs.docker.com/engine/installation/linux/
-
-
-Cheatsheet: Kubernetes commands
+Deploy service witl ELB in aws
 -------------------------------
-kubectl get pod: Get information about all running pods
 
-kubectl describe pod <pod>: Describe one pod
+ClusterIp    -> Expose service through **k8s cluster** with ip/name:port
+NodePort     -> Expose service through **Internal network VM's** also external to k8s ip/name:port
+LoadBalancer -> Expose service through **External world** or whatever you defined in your LB.
 
-kubectl expose pod <pod> --port=444 --name=frontend: Expose the port of a pod (creates a new service)
-
-kubectl port-forward <pod> 8080: Port forward the exposed pod port to your local machine
-
-kubectl attach <podname> -i: Attach to the pod
-
-kubectl exec <pod> -- command: Execute a command on the pod
-kubectl exec <pod> -- ls /app
+> kops validate cluster kubernetes.majumder-jyotisekhar.me --state s3://jm-kops-state
+> kubectl create -f /vagrant_data/first-app/helloworld.yml
+> kubectl create -f /vagrant_data/first-app/helloworld-service.yml
+> kubectl describe services helloworld-service
 
 
-kubectl label pods <pod> mylabel=awesome: Add a new label to a pod
+Replication Controller
+----------------------
+> kubectl create -f data/replication-controller/helloworld-repl-crtl.yaml
+> kubectl describe ReplicationController/helloworld-controller
+> kubctl get pods
 
-kubectl run -i --tty busybox --image=busybox --restart=Never -- sh: Run a shell in a pod - very useful for debugging
+If there are mutiple replicas of same pod and then one pod is deleted [kuctl delete pod <name>] then repliocation controller automatically deploys another pod which delivers the HA feature. 
 
-kubectl get deployments: Get information on current deployments
+Pods can be horizontally scale (up/down) using replicas like below
+> kubectl scale --replicas=4 -f data/replication-controller/helloworld-repl-crtl.yaml
+> kubectl get rc
+> kubectl scale --replicas=1 rc/helloworld-controller
 
-kubectl get services
+Using replication controller pods can be scaled horizontically _ONLY_ if the pods are _STATELESS_, in case of _STATEFUL_ pods we cannot scale the pods like this. 
 
-kubectl get rs: Get information about the replica sets
 
-kubectl get pods --show-labels: get pods, and also show labels attached to those pods
 
-kubectl rollout status deployment/helloworld-deployment: Get deployment status
 
-kubectl set image deployment/helloworld-deployment k8s-demo=k8s-demo:2: Run k8s-demo with the image label version 2
-
-kubectl edit deployment/helloworld-deployment: Edit the deployment object
-
-kubectl rollout status deployment/helloworld-deployment: Get the status of the rollout
-
-kubectl rollout history deployment/helloworld-deployment: Get the rollout history
-
-kubectl rollout undo deployment/helloworld-deployment: Rollback to previous version
-
-kubectl rollout undo deployment/helloworld-deployment --to-revision=n: Rollback to any version version
-
-AWS Commands
-aws ec2 create-volume --size 10 --region us-east-1 --availability-zone us-east-1a --volume-type gp2
-
-Certificates
-Creating a new key for a new user: openssl genrsa -out myuser.pem 2048
-
-Creating a certificate request: openssl req -new -key myuser.pem -out myuser-csr.pem -subj "/CN=myuser/O=myteam/"
-
-Creating a certificate: openssl x509 -req -in myuser-csr.pem -CA /path/to/kubernetes/ca.crt -CAkey /path/to/kubernetes/ca.key -CAcreateserial -out myuser.crt -days 10000
-
-Abbreviations used
-Resource type: Abbreviated alias
-
-configmaps: cm
-
-customresourcedefinition: crd
-
-daemonsets: ds
-
-deployments deploy
-
-horizontalpodautoscalers: hpa
-
-ingresses ing
-
-limitranges limits
-
-namespaces: ns
-
-nodes: no
-
-persistentvolumeclaims: pvc
-
-persistentvolumes: pv
-
-pods: po
-
-replicasets: rs
-
-replicationcontrollers: rc
-
-resourcequotas: quota
-
-serviceaccounts: sa
-
-services: svc
